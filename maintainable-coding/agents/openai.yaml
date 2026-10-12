@@ -1,0 +1,7 @@
+interface:
+  display_name: "Maintainable Coding"
+  short_description: "Make focused, reusable, honestly verified code changes"
+  default_prompt: "Use $maintainable-coding to implement this repository change with focused reuse and honest verification."
+policy:
+  allow_implicit_invocation: true
+
