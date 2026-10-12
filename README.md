@@ -1,4 +1,7 @@
-# maintainable-coding
+# ClearCode
+
+A lightweight skill for AI coding agents to keep projects understandable,
+maintainable, and easy to change.
 
 `maintainable-coding` is an instruction-only Codex Skill for focused repository
 changes: read the relevant path, reuse the right responsibility, implement only
@@ -87,4 +90,3 @@ that the Skill improves behavior.
 - `maintainable-coding/`: installable Skill source and UI metadata;
 - `evals/`: isolated prompts, rubric, fixed Python fixture, and result log;
 - `CHANGELOG.md`: version history and reasons for rule changes.
-
