@@ -1,136 +1,82 @@
 ---
 name: maintainable-coding
-description: Build, change, fix, or review code with focused reuse, clear responsibilities, minimal design, and honest verification. Use for repository implementation work; do not use for pure conceptual questions, translation, or text-only answers that do not change a project.
+description: Implement, fix, delete, replace, or review repository code with focused reuse, minimal scope, and honest verification. Use for code changes; do not use for conceptual questions, translation, or answers that do not change a project.
 ---
 
 # Maintainable Coding
 
-Make the smallest complete change that fits the repository and leaves evidence
-that the requested behavior works. Preserve the user's scope and authority.
+Make the smallest complete change that fits the repository, and leave accurate
+evidence about whether the requested behavior works.
 
 ## Choose the depth
 
-Classify the change before acting:
+- **Low risk:** copy, local configuration, or a narrow fix. Read the target and
+  closest check, make the precise change, and do not add process documents.
+- **Medium risk:** a module feature or business-rule change. Search existing
+  implementations and callers, then run a focused behavior check.
+- **High risk:** a public interface, persistence format, dependency boundary, or
+  cross-module change. Identify affected callers and compatibility or migration
+  needs before implementation.
 
-- **Low risk:** copy, local configuration, or a narrow fix. Read only the target
-  and its closest check, then make the precise change.
-- **Medium risk:** a module feature or business-rule change. Search for existing
-  implementations and callers, state the chosen location briefly, and run a
-  focused behavioral check.
-- **High risk:** public interfaces, persistence formats, dependency boundaries,
-  or changes spanning modules. Identify affected callers, compatibility or
-  migration needs, and meaningful alternatives before implementation.
+Risk controls investigation depth, not authorization. Continue reversible work
+already requested; ask only for an unresolved material choice or an unapproved
+irreversible action.
 
-Risk controls depth, not whether work is allowed. Continue reversible work that
-is already authorized. Ask only when an unresolved choice materially changes the
-result or an unapproved irreversible action is required.
+## Workflow
 
-## Four-step workflow
+### 1. Read
 
-### 1. Read the relevant context
+Read repository instructions, the entry point, owning implementation, direct
+callers, relevant tests, fixtures, configuration, and exports. Search for the
+same rule, helper, adapter, or pattern before adding code. Preserve unrelated
+local changes and avoid a whole-repository audit by default.
 
-Before editing:
+For a new project, read [references/new-project.md](references/new-project.md).
 
-1. Read repository instructions and the files named by the request.
-2. Find the entry point, implementation, direct callers, tests, fixtures,
-   configuration, and exports that the change can affect.
-3. Search for the same business rule, helper, adapter, or pattern before adding
-   another implementation.
-4. Note pre-existing local changes and do not overwrite unrelated work.
+### 2. Place
 
-Use targeted searches first. Do not audit the whole repository by default.
-
-For a new project, first read [references/new-project.md](references/new-project.md).
-Do not require the user to fill in a template when the request already establishes
-the user, core path, and completion criteria.
-
-### 2. Decide responsibility and reuse
-
-Place the change where the repository already owns that responsibility.
-
-- Reuse a fitting existing implementation instead of copying its rule.
+- Reuse a fitting implementation instead of copying its business rule.
 - Keep provider, framework, storage, and transport details at their existing
-  boundary; do not spread them through business code.
-- Prefer the repository's current style and installed dependencies.
-- Add an abstraction only when the current request needs a real variation point
-  or the repository already uses that abstraction.
-- If an existing boundary cannot support the request cleanly, explain the
-  concrete pressure and make the smallest boundary adjustment that resolves it.
+  boundary rather than spreading them through business code.
+- Follow current repository style and dependencies.
+- Add an abstraction only for a variation the request needs or a pattern the
+  repository already uses. Adjust an unsuitable boundary only as far as needed.
 
-Do not freeze an unsuitable architecture merely because it already exists.
+### 3. Change
 
-### 3. Implement the necessary change
+Update every directly affected caller, test, fixture, configuration entry, and
+export, but leave unrelated debt alone. Preserve validation and failure behavior.
+When a requirement changes, update its tests and say what changed; never weaken a
+test merely to obtain a pass.
 
-Change every directly affected caller, test, fixture, configuration entry, and
-export, but do not repair unrelated technical debt.
+For deletion, remove the directly related active path, callers, configuration,
+exports, tests, and documentation without deleting nearby functionality.
 
-- Preserve validation at trust boundaries and error handling that prevents data
-  loss or misleading success.
-- Keep moved or consolidated behavior's validation and failure semantics.
-- Update tests when requirements genuinely change; state which expectation
-  changed. Never weaken or delete a test merely to obtain a pass.
-- Avoid unused factories, registries, plugin systems, base classes, toggles, and
-  extension points.
-- For deletion, search for and remove the directly related active path, callers,
-  configuration, exports, tests, and documentation. Do not delete nearby features.
+### 4. Verify and inspect
 
-### 4. Verify behavior and review the diff
+Run the narrowest existing check that exercises the behavior, widening only when
+risk or failure justifies it. Inspect the final diff for duplicated rules, mixed
+responsibilities, swallowed errors, unused abstraction, stale replaced paths,
+and unrelated or generated changes.
 
-Run the narrowest existing check that exercises the changed behavior, then widen
-only when risk or failures justify it. Prefer repository commands over inventing
-new tooling.
+For deletion, provider replacement, cross-module work, or a requested review,
+read [references/change-review.md](references/change-review.md).
 
-After verification, inspect the actual diff for:
+## Truth and stopping
 
-- duplicated business rules introduced by this change;
-- mixed responsibilities or provider details crossing a boundary;
-- swallowed errors or success reported after failure;
-- abstractions with no current caller or variation;
-- replaced behavior that remains active through another path;
-- accidental unrelated edits, secrets, caches, or generated artifacts.
+- **Passed** means the named command ran successfully on the relevant path.
+- **Failed** means it ran and failed; include the important failure.
+- **Not run** means it was unavailable, blocked, or not executed; say why.
 
-For deeper incremental review, deletion, replacement, or cross-module work, read
-[references/change-review.md](references/change-review.md).
+Do not turn a static read into a test pass. Attempt at most two focused repair
+rounds for the same failing check, then preserve the evidence and report the
+remaining failure. Stop before an unapproved destructive action, publication,
+secret access, or material product choice.
 
-When reporting a maintenance finding, include:
+## Report
 
-1. the file and precise code location;
-2. the concrete behavior or maintenance consequence;
-3. the smallest reasonable correction.
-
-Mark uncertainty when evidence is incomplete. Do not infer a defect from naming
-alone.
-
-## Verification truthfulness
-
-Keep these states distinct:
-
-- **Passed:** the named command ran successfully and exercised the relevant path.
-- **Failed:** the command ran and failed; include the important failure.
-- **Not run:** the command was unavailable, blocked, too broad for the authorized
-  scope, or not executed; say why.
-
-Do not claim the task is fully verified when its relevant check did not run. A
-static read is not a test pass.
-
-## Stop conditions
-
-- Automatically attempt at most two focused repair rounds for the same failing
-  check. If it still fails, stop changing code, preserve the evidence, and report
-  the remaining failure and likely cause.
-- This limit applies to repeated automatic repair of one problem, not to ordinary
-  implementation steps or distinct failures.
-- Stop before an unapproved destructive operation, external publication, secret
-  access, or a material product choice that the user has not made.
-
-## Final report
-
-Usually report only:
-
-- what changed and why it belongs there;
-- the exact checks that passed, failed, or were not run;
-- any remaining limitation or follow-up the user must decide.
-
-Do not produce a design document or repository health report unless it was
-requested or the change is high risk and the information is needed to proceed.
+Usually report only what changed, why it belongs there, exact checks that passed,
+failed, or were not run, and any remaining limitation. A review finding needs a
+code location, concrete consequence, and smallest correction; mark uncertainty
+when evidence is incomplete.
 

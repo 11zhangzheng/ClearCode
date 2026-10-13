@@ -1,0 +1,123 @@
+﻿diff --git a/README.md b/README.md
+new file mode 100644
+index 0000000..6ce6787
+--- /dev/null
++++ b/README.md
+@@ -0,0 +1,19 @@
++# In-memory task service
++
++`TaskService` creates tasks in memory and notifies registered callbacks when a
++task is marked done. A callback receives the completed `Task` object.
++
++```python
++from task_service import TaskService
++
++service = TaskService()
++service.add_completion_listener(lambda task: print(f"Completed: {task.title}"))
++task = service.create_task("Prepare release")
++service.mark_done(task.id)
++```
++
++Run the main-path checks with:
++
++```sh
++python -m unittest -v
++```
+diff --git a/task_service.py b/task_service.py
+new file mode 100644
+index 0000000..0b11f96
+--- /dev/null
++++ b/task_service.py
+@@ -0,0 +1,49 @@
++"""A small in-memory task service with completion callbacks."""
++
++from dataclasses import dataclass
++from typing import Callable
++
++
++@dataclass
++class Task:
++    id: int
++    title: str
++    done: bool = False
++
++
++CompletionListener = Callable[[Task], None]
++
++
++class TaskService:
++    """Create and complete tasks, notifying listeners when they finish."""
++
++    def __init__(self) -> None:
++        self._tasks: dict[int, Task] = {}
++        self._next_id = 1
++        self._listeners: list[CompletionListener] = []
++
++    def add_completion_listener(self, listener: CompletionListener) -> None:
++        """Register a callback that receives each task when it is completed."""
++        self._listeners.append(listener)
++
++    def create_task(self, title: str) -> Task:
++        """Create and store a task with a non-empty title."""
++        if not isinstance(title, str) or not title.strip():
++            raise ValueError("title must be a non-empty string")
++        task = Task(id=self._next_id, title=title.strip())
++        self._tasks[task.id] = task
++        self._next_id += 1
++        return task
++
++    def get_task(self, task_id: int) -> Task:
++        """Return a stored task or raise KeyError if it does not exist."""
++        return self._tasks[task_id]
++
++    def mark_done(self, task_id: int) -> Task:
++        """Mark a task complete and notify listeners once, on first completion."""
++        task = self.get_task(task_id)
++        if not task.done:
++            task.done = True
++            for listener in tuple(self._listeners):
++                listener(task)
++        return task
+diff --git a/test_task_service.py b/test_task_service.py
+new file mode 100644
+index 0000000..c33e624
+--- /dev/null
++++ b/test_task_service.py
+@@ -0,0 +1,37 @@
++import unittest
++
++from task_service import TaskService
++
++
++class TaskServiceTests(unittest.TestCase):
++    def test_create_store_and_notify_on_completion(self) -> None:
++        service = TaskService()
++        notifications = []
++        service.add_completion_listener(notifications.append)
++
++        created = service.create_task("  Write tests  ")
++
++        self.assertEqual(created.title, "Write tests")
++        self.assertFalse(created.done)
++        self.assertIs(service.get_task(created.id), created)
++        self.assertEqual(notifications, [])
++
++        completed = service.mark_done(created.id)
++
++        self.assertTrue(completed.done)
++        self.assertIs(notifications[0], completed)
++        self.assertEqual(len(notifications), 1)
++
++        service.mark_done(created.id)
++        self.assertEqual(len(notifications), 1)
++
++    def test_rejects_empty_title_and_unknown_task(self) -> None:
++        service = TaskService()
++        with self.assertRaises(ValueError):
++            service.create_task("  ")
++        with self.assertRaises(KeyError):
++            service.mark_done(999)
++
++
++if __name__ == "__main__":
++    unittest.main()

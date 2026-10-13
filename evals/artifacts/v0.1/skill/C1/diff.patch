@@ -1,0 +1,92 @@
+﻿diff --git a/task_service.py b/task_service.py
+new file mode 100644
+index 0000000..3ac9dce
+--- /dev/null
++++ b/task_service.py
+@@ -0,0 +1,44 @@
++"""A small in-memory task service with completion notifications."""
++
++from dataclasses import dataclass
++from uuid import UUID, uuid4
++
++
++@dataclass(frozen=True)
++class Task:
++    id: UUID
++    title: str
++    done: bool = False
++
++
++class TaskService:
++    def __init__(self) -> None:
++        self._tasks: dict[UUID, Task] = {}
++        self._completion_notifications: list[Task] = []
++
++    def create_task(self, title: str) -> Task:
++        """Store and return a task with a non-empty title."""
++        if not isinstance(title, str) or not title.strip():
++            raise ValueError("title must be a non-empty string")
++
++        task = Task(id=uuid4(), title=title.strip())
++        self._tasks[task.id] = task
++        return task
++
++    def mark_done(self, task_id: UUID) -> Task:
++        """Mark a task done and record its completion notification once."""
++        try:
++            task = self._tasks[task_id]
++        except KeyError:
++            raise KeyError(f"unknown task: {task_id}") from None
++
++        if not task.done:
++            task = Task(id=task.id, title=task.title, done=True)
++            self._tasks[task.id] = task
++            self._completion_notifications.append(task)
++        return task
++
++    @property
++    def completion_notifications(self) -> tuple[Task, ...]:
++        """Return completion notifications recorded by this service."""
++        return tuple(self._completion_notifications)
+diff --git a/test_task_service.py b/test_task_service.py
+new file mode 100644
+index 0000000..f27ec13
+--- /dev/null
++++ b/test_task_service.py
+@@ -0,0 +1,36 @@
++import unittest
++
++from task_service import TaskService
++
++
++class TaskServiceTests(unittest.TestCase):
++    def test_create_and_complete_task_notifies_caller(self) -> None:
++        service = TaskService()
++
++        task = service.create_task("  Write release notes  ")
++        completed = service.mark_done(task.id)
++
++        self.assertEqual(task.title, "Write release notes")
++        self.assertFalse(task.done)
++        self.assertTrue(completed.done)
++        self.assertEqual(service.completion_notifications, (completed,))
++
++    def test_repeated_completion_notifies_only_once(self) -> None:
++        service = TaskService()
++        task = service.create_task("Review change")
++
++        first = service.mark_done(task.id)
++        second = service.mark_done(task.id)
++
++        self.assertEqual(first, second)
++        self.assertEqual(service.completion_notifications, (first,))
++
++    def test_rejects_empty_title(self) -> None:
++        service = TaskService()
++
++        with self.assertRaises(ValueError):
++            service.create_task("  ")
++
++
++if __name__ == "__main__":
++    unittest.main()

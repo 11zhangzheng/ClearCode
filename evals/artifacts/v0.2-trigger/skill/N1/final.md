@@ -1,0 +1,1 @@
+Software maintainability is how easily software can be understood, changed, and fixed over time. It depends on qualities like clear structure, good documentation, and manageable complexity.

@@ -1,0 +1,38 @@
+﻿diff --git a/src/task_service/service.py b/src/task_service/service.py
+index 36f8479..4149149 100644
+--- a/src/task_service/service.py
++++ b/src/task_service/service.py
+@@ -15,6 +15,14 @@ class TaskService:
+             raise ValueError("task title already exists")
+         return self._repository.add(normalized)
+ 
++    def rename_task(self, task_id: int, title: str) -> Task:
++        task = self._repository.get(task_id)
++        normalized = normalize_title(title)
++        if normalized != task.title and self._repository.title_exists(normalized):
++            raise ValueError("task title already exists")
++        task.title = normalized
++        return task
++
+     def complete_task(self, task_id: int) -> Task:
+         task = self._repository.get(task_id)
+         task.done = True
+diff --git a/tests/test_service.py b/tests/test_service.py
+index 83f9253..936cf76 100644
+--- a/tests/test_service.py
++++ b/tests/test_service.py
+@@ -26,6 +26,14 @@ class TaskServiceTests(unittest.TestCase):
+         with self.assertRaises(ValueError):
+             self.service.create_task("   ")
+ 
++    def test_renames_task_with_normalized_title(self) -> None:
++        task = self.service.create_task("Draft")
++
++        renamed = self.service.rename_task(task.id, "  Publish  ")
++
++        self.assertIs(task, renamed)
++        self.assertEqual("Publish", renamed.title)
++
+     def test_rejects_duplicate_title_but_case_variants_are_currently_allowed(self) -> None:
+         self.service.create_task("Review")
+         with self.assertRaises(ValueError):

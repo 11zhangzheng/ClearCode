@@ -1,0 +1,116 @@
+﻿diff --git a/README.md b/README.md
+index d2f8105..ee396f5 100644
+--- a/README.md
++++ b/README.md
+@@ -12,6 +12,11 @@ $env:PYTHONPATH = "src"
+ python -m unittest discover -s tests -v
+ ```
+ 
++The CLI requires `TASK_COMPLETION_WEBHOOK_URL` to send task completion
++notifications as a JSON `POST` request. `TaskService` accepts a notifier
++through its constructor, so its tests can use a recording notifier without
++network access.
++
+ For a case run, copy this entire directory to a fresh temporary location. Do not
+ edit this source fixture and do not share a modified copy between runs.
+ 
+diff --git a/src/task_service/cli.py b/src/task_service/cli.py
+index e9f052b..7451e3e 100644
+--- a/src/task_service/cli.py
++++ b/src/task_service/cli.py
+@@ -1,10 +1,15 @@
+-from .notifications import ConsoleNotifier
++import os
++
++from .notifications import WebhookNotifier
+ from .repository import InMemoryTaskRepository
+ from .service import TaskService
+ 
+ 
+ def main() -> None:
+-    service = TaskService(InMemoryTaskRepository(), ConsoleNotifier())
++    webhook_url = os.environ.get("TASK_COMPLETION_WEBHOOK_URL")
++    if not webhook_url:
++        raise ValueError("TASK_COMPLETION_WEBHOOK_URL is required")
++    service = TaskService(InMemoryTaskRepository(), WebhookNotifier(webhook_url))
+     title = input("Title: ")
+     service.create_task(title)
+     print("Task created")
+diff --git a/src/task_service/notifications.py b/src/task_service/notifications.py
+index 1c07d24..18c79c2 100644
+--- a/src/task_service/notifications.py
++++ b/src/task_service/notifications.py
+@@ -1,4 +1,6 @@
+ from typing import Protocol
++import json
++from urllib.request import Request, urlopen
+ 
+ from .domain import Task
+ 
+@@ -7,7 +9,22 @@ class Notifier(Protocol):
+     def task_completed(self, task: Task) -> None: ...
+ 
+ 
+-class ConsoleNotifier:
++class WebhookNotifier:
++    def __init__(self, url: str) -> None:
++        if not url:
++            raise ValueError("webhook URL is required")
++        self._url = url
++
+     def task_completed(self, task: Task) -> None:
+-        print(f"Task completed: {task.title}")
++        payload = json.dumps(
++            {"event": "task_completed", "task": {"id": task.id, "title": task.title}}
++        ).encode("utf-8")
++        request = Request(
++            self._url,
++            data=payload,
++            headers={"Content-Type": "application/json"},
++            method="POST",
++        )
++        with urlopen(request) as response:
++            response.read()
+ 
+diff --git a/tests/test_service.py b/tests/test_service.py
+index 83f9253..35104f7 100644
+--- a/tests/test_service.py
++++ b/tests/test_service.py
+@@ -1,5 +1,10 @@
+ import unittest
++import json
++from unittest.mock import patch
++from urllib.request import Request
+ 
++from task_service.domain import Task
++from task_service.notifications import WebhookNotifier
+ from task_service.repository import InMemoryTaskRepository
+ from task_service.service import TaskService
+ 
+@@ -43,6 +48,26 @@ class TaskServiceTests(unittest.TestCase):
+             self.service.complete_task(999)
+ 
+ 
++class WebhookNotifierTests(unittest.TestCase):
++    def test_posts_json_completion_message(self) -> None:
++        with patch("task_service.notifications.urlopen") as urlopen:
++            WebhookNotifier("https://example.test/tasks").task_completed(Task(7, "Ship", True))
++
++        request = urlopen.call_args.args[0]
++        self.assertIsInstance(request, Request)
++        self.assertEqual("https://example.test/tasks", request.full_url)
++        self.assertEqual("POST", request.method)
++        self.assertEqual("application/json", request.get_header("Content-type"))
++        self.assertEqual(
++            {"event": "task_completed", "task": {"id": 7, "title": "Ship"}},
++            json.loads(request.data),
++        )
++
++    def test_requires_url(self) -> None:
++        with self.assertRaises(ValueError):
++            WebhookNotifier("")
++
++
+ if __name__ == "__main__":
+     unittest.main()
+ 

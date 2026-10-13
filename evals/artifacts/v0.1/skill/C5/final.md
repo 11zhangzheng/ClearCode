@@ -1,0 +1,3 @@
+Removed completion notifications by deleting the notifier interface and console adapter, removing notifier injection from `TaskService` and the CLI, and updating the completion test to check that the task is marked done. Task creation and completion remain supported.
+
+**Checks:** `python -m unittest discover -s tests -v` passed (5 tests); `git diff --check` passed. No active notification references remain.

@@ -7,9 +7,10 @@ maintainable, and easy to change.
 changes: read the relevant path, reuse the right responsibility, implement only
 what the request needs, and report verification honestly.
 
-Version 0.1.0 is a build candidate. Its package structure and fixture can be
-validated locally; behavioral case runs and fresh-session trigger tests remain
-explicitly recorded as not run in `evals/results.md` until they are performed.
+Version 0.2.0 is an internal-use candidate. v0.1 passed all eight paired cases;
+v0.2 shortened the core Skill by about 40% and passed five high-value regressions
+plus three positive and two negative trigger checks. See `evals/results.md` and
+`evals/results-v0.2.md` for the measured limits as well as the passes.
 
 ## Scope
 
@@ -51,8 +52,8 @@ On 2026-10-12, the package was checked with Codex desktop 26.1007.21434 (build
 13901, production channel). A copy at
 `<isolated-repository>\.codex\skills\maintainable-coding` retained all required
 references and metadata, and removing that directory preserved the repository's
-`pyproject.toml`. Fresh-chat explicit and automatic invocation are still not run;
-see `evals/results.md`.
+`pyproject.toml`. On 2026-10-13, Codex CLI 0.162.0-alpha.17.2 completed explicit,
+natural, and negative invocation checks with `gpt-6-luna` at low reasoning.
 
 ## Update
 
@@ -84,6 +85,9 @@ python -m unittest discover -s evals\fixtures\task-service\tests -v
 The fixed prompts and hidden rubrics are in `evals/`. Follow `evals/cases.md` for
 independent baseline-versus-Skill runs; do not treat package validation as evidence
 that the Skill improves behavior.
+
+`evals/run-evals.ps1` is evaluation infrastructure, not an installed Skill
+dependency. Raw traces and temporary repositories are intentionally ignored.
 
 ## Package contents
 

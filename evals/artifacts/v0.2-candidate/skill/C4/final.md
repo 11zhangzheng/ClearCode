@@ -1,0 +1,3 @@
+Replaced `ConsoleNotifier` with `WebhookNotifier`, which POSTs a JSON completion message. The CLI reads its URL from `TASK_COMPLETION_WEBHOOK_URL`. `TaskService` still accepts the `Notifier` protocol, and the webhook test injects a fake opener, so it runs without network access.
+
+**Checks:** `python -m unittest discover -s tests -v` passed (6 tests); `git diff --check` passed. No active console notifier references remain.

@@ -1,0 +1,55 @@
+﻿diff --git a/src/task_service/repository.py b/src/task_service/repository.py
+index 5147b92..0acf44f 100644
+--- a/src/task_service/repository.py
++++ b/src/task_service/repository.py
+@@ -21,3 +21,14 @@ class InMemoryTaskRepository:
+     def title_exists(self, title: str) -> bool:
+         return any(task.title == title for task in self._tasks.values())
+ 
++    def update_title(self, task_id: int, title: str) -> Task:
++        task = self.get(task_id)
++        task.title = title
++        return task
++
++    def title_exists_for_other_task(self, task_id: int, title: str) -> bool:
++        return any(
++            task.id != task_id and task.title == title
++            for task in self._tasks.values()
++        )
++
+diff --git a/src/task_service/service.py b/src/task_service/service.py
+index 36f8479..eb1b90b 100644
+--- a/src/task_service/service.py
++++ b/src/task_service/service.py
+@@ -15,6 +15,13 @@ class TaskService:
+             raise ValueError("task title already exists")
+         return self._repository.add(normalized)
+ 
++    def rename_task(self, task_id: int, title: str) -> Task:
++        normalized = normalize_title(title)
++        task = self._repository.get(task_id)
++        if self._repository.title_exists_for_other_task(task_id, normalized):
++            raise ValueError("task title already exists")
++        return self._repository.update_title(task.id, normalized)
++
+     def complete_task(self, task_id: int) -> Task:
+         task = self._repository.get(task_id)
+         task.done = True
+diff --git a/tests/test_service.py b/tests/test_service.py
+index 83f9253..513e0ba 100644
+--- a/tests/test_service.py
++++ b/tests/test_service.py
+@@ -32,6 +32,13 @@ class TaskServiceTests(unittest.TestCase):
+             self.service.create_task("Review")
+         self.service.create_task("review")
+ 
++    def test_renames_task_with_normalized_title(self) -> None:
++        task = self.service.create_task("Original")
++        renamed = self.service.rename_task(task.id, "  Updated  ")
++
++        self.assertIs(task, renamed)
++        self.assertEqual("Updated", task.title)
++
+     def test_completes_and_notifies(self) -> None:
+         task = self.service.create_task("Ship")
+         completed = self.service.complete_task(task.id)

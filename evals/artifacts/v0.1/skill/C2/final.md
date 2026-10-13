@@ -1,0 +1,3 @@
+Added `TaskService.rename_task(task_id, title)` in `service.py`. It reuses creation’s title normalization, rejects duplicate titles, and returns the renamed task. Added a focused test for trimming and renaming in `test_service.py`.
+
+**Checks:** `python tests/test_service.py -v` passed all 6 tests; `git diff --check` passed. The initial `python -m unittest tests.test_service -v` invocation failed because `tests` is not an importable package; running the test file directly succeeded.

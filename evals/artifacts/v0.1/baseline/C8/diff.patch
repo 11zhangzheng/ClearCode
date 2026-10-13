@@ -1,0 +1,51 @@
+﻿diff --git a/README.md b/README.md
+index d2f8105..16a9551 100644
+--- a/README.md
++++ b/README.md
+@@ -1,8 +1,9 @@
+ # Task service evaluation fixture
+ 
+ This intentionally small Python repository is the fixed starting state for C2–C8.
+-It contains one deliberate title-length defect for C3/C6 and documents the current
+-case-sensitive duplicate rule for C8. Those are evaluation inputs, not accidental
++It contains one deliberate title-length defect for C3/C6. Task titles are
++normalized for surrounding whitespace and duplicate checks ignore letter case.
++Those are evaluation inputs, not accidental
+ unfinished production work.
+ 
+ Run the dependency-free baseline suite from this directory:
+diff --git a/src/task_service/repository.py b/src/task_service/repository.py
+index 5147b92..2191073 100644
+--- a/src/task_service/repository.py
++++ b/src/task_service/repository.py
+@@ -19,5 +19,5 @@ class InMemoryTaskRepository:
+             raise LookupError(f"task {task_id} not found") from error
+ 
+     def title_exists(self, title: str) -> bool:
+-        return any(task.title == title for task in self._tasks.values())
++        return any(task.title.casefold() == title.casefold() for task in self._tasks.values())
+ 
+diff --git a/tests/test_service.py b/tests/test_service.py
+index 83f9253..c2abe45 100644
+--- a/tests/test_service.py
++++ b/tests/test_service.py
+@@ -26,11 +26,17 @@ class TaskServiceTests(unittest.TestCase):
+         with self.assertRaises(ValueError):
+             self.service.create_task("   ")
+ 
+-    def test_rejects_duplicate_title_but_case_variants_are_currently_allowed(self) -> None:
++    def test_rejects_duplicate_title_case_insensitively(self) -> None:
+         self.service.create_task("Review")
+         with self.assertRaises(ValueError):
+             self.service.create_task("Review")
+-        self.service.create_task("review")
++        with self.assertRaises(ValueError):
++            self.service.create_task("review")
++
++    def test_duplicate_check_keeps_whitespace_normalization(self) -> None:
++        self.service.create_task("Review")
++        with self.assertRaises(ValueError):
++            self.service.create_task("  review  ")
+ 
+     def test_completes_and_notifies(self) -> None:
+         task = self.service.create_task("Ship")

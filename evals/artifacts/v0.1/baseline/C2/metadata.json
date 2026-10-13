@@ -1,0 +1,18 @@
+﻿{
+    "case":  "C2",
+    "condition":  "baseline",
+    "model":  "gpt-6-luna",
+    "reasoning":  "low",
+    "codex_version":  "codex-cli 0.162.0-alpha.17.2",
+    "codex_exit":  0,
+    "elapsed_seconds":  66.75,
+    "fixture_tests":  "passed",
+    "fixture_test_exit":  0,
+    "usage":  {
+                  "input_tokens":  132931,
+                  "cached_input_tokens":  112896,
+                  "cache_write_input_tokens":  0,
+                  "output_tokens":  784,
+                  "reasoning_output_tokens":  0
+              }
+}

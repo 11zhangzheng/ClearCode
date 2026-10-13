@@ -1,0 +1,90 @@
+﻿diff --git a/src/task_service/cli.py b/src/task_service/cli.py
+index e9f052b..08d3d67 100644
+--- a/src/task_service/cli.py
++++ b/src/task_service/cli.py
+@@ -1,10 +1,9 @@
+-from .notifications import ConsoleNotifier
+ from .repository import InMemoryTaskRepository
+ from .service import TaskService
+ 
+ 
+ def main() -> None:
+-    service = TaskService(InMemoryTaskRepository(), ConsoleNotifier())
++    service = TaskService(InMemoryTaskRepository())
+     title = input("Title: ")
+     service.create_task(title)
+     print("Task created")
+@@ -12,4 +11,3 @@ def main() -> None:
+ 
+ if __name__ == "__main__":
+     main()
+-
+diff --git a/src/task_service/service.py b/src/task_service/service.py
+index 36f8479..ba34aee 100644
+--- a/src/task_service/service.py
++++ b/src/task_service/service.py
+@@ -1,13 +1,11 @@
+ from .domain import Task
+-from .notifications import Notifier
+ from .repository import InMemoryTaskRepository
+ from .titles import normalize_title
+ 
+ 
+ class TaskService:
+-    def __init__(self, repository: InMemoryTaskRepository, notifier: Notifier) -> None:
++    def __init__(self, repository: InMemoryTaskRepository) -> None:
+         self._repository = repository
+-        self._notifier = notifier
+ 
+     def create_task(self, title: str) -> Task:
+         normalized = normalize_title(title)
+@@ -18,6 +16,4 @@ class TaskService:
+     def complete_task(self, task_id: int) -> Task:
+         task = self._repository.get(task_id)
+         task.done = True
+-        self._notifier.task_completed(task)
+         return task
+-
+diff --git a/tests/test_service.py b/tests/test_service.py
+index 83f9253..5b06f91 100644
+--- a/tests/test_service.py
++++ b/tests/test_service.py
+@@ -4,19 +4,10 @@ from task_service.repository import InMemoryTaskRepository
+ from task_service.service import TaskService
+ 
+ 
+-class RecordingNotifier:
+-    def __init__(self) -> None:
+-        self.completed_ids: list[int] = []
+-
+-    def task_completed(self, task) -> None:
+-        self.completed_ids.append(task.id)
+-
+-
+ class TaskServiceTests(unittest.TestCase):
+     def setUp(self) -> None:
+         self.repository = InMemoryTaskRepository()
+-        self.notifier = RecordingNotifier()
+-        self.service = TaskService(self.repository, self.notifier)
++        self.service = TaskService(self.repository)
+ 
+     def test_creates_normalized_task(self) -> None:
+         task = self.service.create_task("  Write tests  ")
+@@ -32,11 +23,10 @@ class TaskServiceTests(unittest.TestCase):
+             self.service.create_task("Review")
+         self.service.create_task("review")
+ 
+-    def test_completes_and_notifies(self) -> None:
++    def test_completes_task(self) -> None:
+         task = self.service.create_task("Ship")
+         completed = self.service.complete_task(task.id)
+         self.assertTrue(completed.done)
+-        self.assertEqual([task.id], self.notifier.completed_ids)
+ 
+     def test_rejects_unknown_task(self) -> None:
+         with self.assertRaises(LookupError):
+@@ -45,4 +35,3 @@ class TaskServiceTests(unittest.TestCase):
+ 
+ if __name__ == "__main__":
+     unittest.main()
+-

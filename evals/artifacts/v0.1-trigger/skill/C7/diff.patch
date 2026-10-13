@@ -1,0 +1,13 @@
+﻿diff --git a/src/task_service/cli.py b/src/task_service/cli.py
+index e9f052b..18b3882 100644
+--- a/src/task_service/cli.py
++++ b/src/task_service/cli.py
+@@ -7,7 +7,7 @@ def main() -> None:
+     service = TaskService(InMemoryTaskRepository(), ConsoleNotifier())
+     title = input("Title: ")
+     service.create_task(title)
+-    print("Task created")
++    print("Task saved")
+ 
+ 
+ if __name__ == "__main__":

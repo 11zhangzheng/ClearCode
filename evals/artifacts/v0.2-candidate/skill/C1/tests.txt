@@ -1,0 +1,9 @@
+test_create_and_complete_notifies_once ... ok
+test_rejects_empty_title ... ok
+test_unknown_task_has_clear_error ... ok
+
+Ran 3 tests in 0.001s
+
+OK
+
+Manual external rerun: bundled Python 3.12, `python -m unittest -v`.

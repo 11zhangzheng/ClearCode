@@ -1,0 +1,11 @@
+﻿test_completes_and_notifies (test_service.TaskServiceTests.test_completes_and_notifies) ... ok
+test_creates_normalized_task (test_service.TaskServiceTests.test_creates_normalized_task) ... ok
+test_duplicate_check_keeps_whitespace_normalization (test_service.TaskServiceTests.test_duplicate_check_keeps_whitespace_normalization) ... ok
+test_rejects_duplicate_title_case_insensitively (test_service.TaskServiceTests.test_rejects_duplicate_title_case_insensitively) ... ok
+test_rejects_empty_title (test_service.TaskServiceTests.test_rejects_empty_title) ... ok
+test_rejects_unknown_task (test_service.TaskServiceTests.test_rejects_unknown_task) ... ok
+System.Management.Automation.RemoteException
+----------------------------------------------------------------------
+Ran 6 tests in 0.000s
+System.Management.Automation.RemoteException
+OK

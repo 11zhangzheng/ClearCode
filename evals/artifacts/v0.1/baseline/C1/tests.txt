@@ -1,0 +1,8 @@
+test_create_store_and_notify_on_completion ... ok
+test_rejects_empty_title_and_unknown_task ... ok
+
+Ran 2 tests in 0.000s
+
+OK
+
+Manual external rerun: bundled Python 3.12, `python -m unittest -v`.

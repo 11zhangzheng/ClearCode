@@ -1,0 +1,120 @@
+﻿diff --git a/src/task_service/cli.py b/src/task_service/cli.py
+index e9f052b..ceb7637 100644
+--- a/src/task_service/cli.py
++++ b/src/task_service/cli.py
+@@ -1,10 +1,15 @@
+-from .notifications import ConsoleNotifier
++import os
++
++from .notifications import WebhookNotifier
+ from .repository import InMemoryTaskRepository
+ from .service import TaskService
+ 
+ 
+ def main() -> None:
+-    service = TaskService(InMemoryTaskRepository(), ConsoleNotifier())
++    webhook_url = os.environ.get("TASK_COMPLETION_WEBHOOK_URL", "")
++    service = TaskService(
++        InMemoryTaskRepository(), WebhookNotifier(webhook_url)
++    )
+     title = input("Title: ")
+     service.create_task(title)
+     print("Task created")
+@@ -12,4 +17,3 @@ def main() -> None:
+ 
+ if __name__ == "__main__":
+     main()
+-
+diff --git a/src/task_service/notifications.py b/src/task_service/notifications.py
+index 1c07d24..24342b2 100644
+--- a/src/task_service/notifications.py
++++ b/src/task_service/notifications.py
+@@ -1,4 +1,6 @@
+-from typing import Protocol
++import json
++from typing import Callable, Protocol
++from urllib.request import Request, urlopen
+ 
+ from .domain import Task
+ 
+@@ -7,7 +9,31 @@ class Notifier(Protocol):
+     def task_completed(self, task: Task) -> None: ...
+ 
+ 
+-class ConsoleNotifier:
+-    def task_completed(self, task: Task) -> None:
+-        print(f"Task completed: {task.title}")
++HttpPost = Callable[[str, bytes], None]
++
++
++def _post_json(url: str, body: bytes) -> None:
++    request = Request(
++        url,
++        data=body,
++        headers={"Content-Type": "application/json"},
++        method="POST",
++    )
++    with urlopen(request) as response:
++        response.read()
+ 
++
++class WebhookNotifier:
++    def __init__(self, url: str, post: HttpPost = _post_json) -> None:
++        if not url.strip():
++            raise ValueError("webhook URL must not be empty")
++        self._url = url
++        self._post = post
++
++    def task_completed(self, task: Task) -> None:
++        payload = {
++            "event": "task.completed",
++            "task": {"id": task.id, "title": task.title, "done": task.done},
++        }
++        body = json.dumps(payload).encode("utf-8")
++        self._post(self._url, body)
+diff --git a/tests/test_service.py b/tests/test_service.py
+index 83f9253..85141b5 100644
+--- a/tests/test_service.py
++++ b/tests/test_service.py
+@@ -1,5 +1,8 @@
++import json
+ import unittest
+ 
++from task_service.domain import Task
++from task_service.notifications import WebhookNotifier
+ from task_service.repository import InMemoryTaskRepository
+ from task_service.service import TaskService
+ 
+@@ -43,6 +46,32 @@ class TaskServiceTests(unittest.TestCase):
+             self.service.complete_task(999)
+ 
+ 
++class WebhookNotifierTests(unittest.TestCase):
++    def test_posts_json_completion_message_to_configured_url(self) -> None:
++        requests: list[tuple[str, bytes]] = []
++        notifier = WebhookNotifier(
++            "https://example.test/hooks/tasks",
++            post=lambda url, body: requests.append((url, body)),
++        )
++
++        notifier.task_completed(Task(7, "Ship", done=True))
++
++        self.assertEqual(1, len(requests))
++        url, body = requests[0]
++        self.assertEqual("https://example.test/hooks/tasks", url)
++        self.assertEqual(
++            {
++                "event": "task.completed",
++                "task": {"id": 7, "title": "Ship", "done": True},
++            },
++            json.loads(body),
++        )
++
++    def test_rejects_empty_webhook_url(self) -> None:
++        with self.assertRaises(ValueError):
++            WebhookNotifier("  ")
++
++
+ if __name__ == "__main__":
+     unittest.main()
+ 

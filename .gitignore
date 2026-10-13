@@ -3,3 +3,8 @@ __pycache__/
 .pytest_cache/
 dist/
 evals/.smoke-project/
+evals/.runs/
+evals/artifacts/**/trace.jsonl
+evals/artifacts/**/stderr.log
+evals/artifacts/v0.1-invalid-workspace-policy/
+evals/artifacts/v0.1-calibration-host-skills/

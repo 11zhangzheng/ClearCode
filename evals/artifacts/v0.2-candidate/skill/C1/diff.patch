@@ -1,0 +1,94 @@
+﻿diff --git a/task_service.py b/task_service.py
+new file mode 100644
+index 0000000..81946f6
+--- /dev/null
++++ b/task_service.py
+@@ -0,0 +1,49 @@
++from dataclasses import dataclass
++from typing import Callable
++
++
++@dataclass
++class Task:
++    id: int
++    title: str
++    done: bool = False
++
++
++CompletionListener = Callable[[Task], None]
++
++
++class TaskService:
++    """Store tasks in memory and notify listeners when one is completed."""
++
++    def __init__(self, on_completed: CompletionListener | None = None) -> None:
++        self._tasks: dict[int, Task] = {}
++        self._next_id = 1
++        self._on_completed = on_completed
++
++    def create_task(self, title: str) -> Task:
++        title = title.strip()
++        if not title:
++            raise ValueError("title must not be empty")
++
++        task = Task(id=self._next_id, title=title)
++        self._tasks[task.id] = task
++        self._next_id += 1
++        return task
++
++    def mark_done(self, task_id: int) -> Task:
++        try:
++            task = self._tasks[task_id]
++        except KeyError:
++            raise KeyError(f"task {task_id} does not exist") from None
++
++        if not task.done:
++            task.done = True
++            if self._on_completed is not None:
++                self._on_completed(task)
++        return task
++
++    def get_task(self, task_id: int) -> Task:
++        try:
++            return self._tasks[task_id]
++        except KeyError:
++            raise KeyError(f"task {task_id} does not exist") from None
+diff --git a/test_task_service.py b/test_task_service.py
+new file mode 100644
+index 0000000..1c52b1a
+--- /dev/null
++++ b/test_task_service.py
+@@ -0,0 +1,33 @@
++import unittest
++
++from task_service import TaskService
++
++
++class TaskServiceTests(unittest.TestCase):
++    def test_create_and_complete_notifies_once(self):
++        completed = []
++        service = TaskService(on_completed=completed.append)
++
++        task = service.create_task("  Write tests  ")
++        self.assertEqual(task.title, "Write tests")
++        self.assertIs(service.get_task(task.id), task)
++
++        result = service.mark_done(task.id)
++        service.mark_done(task.id)
++
++        self.assertTrue(result.done)
++        self.assertEqual(completed, [task])
++
++    def test_rejects_empty_title(self):
++        service = TaskService()
++        with self.assertRaises(ValueError):
++            service.create_task("  ")
++
++    def test_unknown_task_has_clear_error(self):
++        service = TaskService()
++        with self.assertRaisesRegex(KeyError, "task 10 does not exist"):
++            service.mark_done(10)
++
++
++if __name__ == "__main__":
++    unittest.main()

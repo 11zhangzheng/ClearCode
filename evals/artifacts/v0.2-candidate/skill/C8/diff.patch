@@ -1,0 +1,30 @@
+﻿diff --git a/src/task_service/repository.py b/src/task_service/repository.py
+index 5147b92..2191073 100644
+--- a/src/task_service/repository.py
++++ b/src/task_service/repository.py
+@@ -19,5 +19,5 @@ class InMemoryTaskRepository:
+             raise LookupError(f"task {task_id} not found") from error
+ 
+     def title_exists(self, title: str) -> bool:
+-        return any(task.title == title for task in self._tasks.values())
++        return any(task.title.casefold() == title.casefold() for task in self._tasks.values())
+ 
+diff --git a/tests/test_service.py b/tests/test_service.py
+index 83f9253..5daa13c 100644
+--- a/tests/test_service.py
++++ b/tests/test_service.py
+@@ -26,11 +26,12 @@ class TaskServiceTests(unittest.TestCase):
+         with self.assertRaises(ValueError):
+             self.service.create_task("   ")
+ 
+-    def test_rejects_duplicate_title_but_case_variants_are_currently_allowed(self) -> None:
++    def test_rejects_duplicate_titles_ignoring_case(self) -> None:
+         self.service.create_task("Review")
+         with self.assertRaises(ValueError):
+             self.service.create_task("Review")
+-        self.service.create_task("review")
++        with self.assertRaises(ValueError):
++            self.service.create_task("review")
+ 
+     def test_completes_and_notifies(self) -> None:
+         task = self.service.create_task("Ship")

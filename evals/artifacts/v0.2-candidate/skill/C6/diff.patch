@@ -1,0 +1,32 @@
+﻿diff --git a/src/task_service/titles.py b/src/task_service/titles.py
+index 196de04..a5b6130 100644
+--- a/src/task_service/titles.py
++++ b/src/task_service/titles.py
+@@ -2,7 +2,7 @@ def normalize_title(title: str) -> str:
+     normalized = title.strip()
+     if not normalized:
+         raise ValueError("title is required")
+-    if len(normalized) >= 80:  # Intentional C3 fixture defect.
++    if len(normalized) > 80:
+         raise ValueError("title must be at most 80 characters")
+     return normalized
+ 
+diff --git a/tests/test_service.py b/tests/test_service.py
+index 83f9253..92e4015 100644
+--- a/tests/test_service.py
++++ b/tests/test_service.py
+@@ -26,6 +26,14 @@ class TaskServiceTests(unittest.TestCase):
+         with self.assertRaises(ValueError):
+             self.service.create_task("   ")
+ 
++    def test_accepts_title_at_80_characters_and_rejects_81(self) -> None:
++        title = "a" * 80
++        task = self.service.create_task(title)
++        self.assertEqual(title, task.title)
++
++        with self.assertRaises(ValueError):
++            self.service.create_task("a" * 81)
++
+     def test_rejects_duplicate_title_but_case_variants_are_currently_allowed(self) -> None:
+         self.service.create_task("Review")
+         with self.assertRaises(ValueError):

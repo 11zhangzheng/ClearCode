@@ -1,0 +1,18 @@
+﻿{
+    "case":  "N1",
+    "condition":  "skill",
+    "model":  "gpt-6-luna",
+    "reasoning":  "low",
+    "codex_version":  "codex-cli 0.162.0-alpha.17.2",
+    "codex_exit":  0,
+    "elapsed_seconds":  40.24,
+    "fixture_tests":  "passed",
+    "fixture_test_exit":  0,
+    "usage":  {
+                  "input_tokens":  17874,
+                  "cached_input_tokens":  6912,
+                  "cache_write_input_tokens":  0,
+                  "output_tokens":  24,
+                  "reasoning_output_tokens":  0
+              }
+}

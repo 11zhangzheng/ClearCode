@@ -1,0 +1,12 @@
+﻿test_completes_and_notifies (test_service.TaskServiceTests.test_completes_and_notifies) ... ok
+test_creates_normalized_task (test_service.TaskServiceTests.test_creates_normalized_task) ... ok
+test_rejects_duplicate_title_but_case_variants_are_currently_allowed (test_service.TaskServiceTests.test_rejects_duplicate_title_but_case_variants_are_currently_allowed) ... ok
+test_rejects_empty_title (test_service.TaskServiceTests.test_rejects_empty_title) ... ok
+test_rejects_unknown_task (test_service.TaskServiceTests.test_rejects_unknown_task) ... ok
+test_posts_completion_json (test_service.WebhookNotifierTests.test_posts_completion_json) ... ok
+test_requires_url (test_service.WebhookNotifierTests.test_requires_url) ... ok
+System.Management.Automation.RemoteException
+----------------------------------------------------------------------
+Ran 7 tests in 0.002s
+System.Management.Automation.RemoteException
+OK

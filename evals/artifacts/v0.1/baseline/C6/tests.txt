@@ -1,0 +1,12 @@
+﻿test_accepts_title_of_exactly_80_characters (test_service.TaskServiceTests.test_accepts_title_of_exactly_80_characters) ... ok
+test_completes_and_notifies (test_service.TaskServiceTests.test_completes_and_notifies) ... ok
+test_creates_normalized_task (test_service.TaskServiceTests.test_creates_normalized_task) ... ok
+test_rejects_duplicate_title_but_case_variants_are_currently_allowed (test_service.TaskServiceTests.test_rejects_duplicate_title_but_case_variants_are_currently_allowed) ... ok
+test_rejects_empty_title (test_service.TaskServiceTests.test_rejects_empty_title) ... ok
+test_rejects_title_longer_than_80_characters (test_service.TaskServiceTests.test_rejects_title_longer_than_80_characters) ... ok
+test_rejects_unknown_task (test_service.TaskServiceTests.test_rejects_unknown_task) ... ok
+System.Management.Automation.RemoteException
+----------------------------------------------------------------------
+Ran 7 tests in 0.001s
+System.Management.Automation.RemoteException
+OK
